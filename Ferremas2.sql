@@ -1,0 +1,7 @@
+
+BEGIN
+  
+    INSERT INTO api_producto VALUES ('10','TALADRO','TALADRO PERCUTOR 2 VELOCIDADES' , 15000,
+    'MAKITA', BFILENAME('DIR_FOTOS_PRODUCTOS','1.jpg'),'unidad',1);
+      
+END;
