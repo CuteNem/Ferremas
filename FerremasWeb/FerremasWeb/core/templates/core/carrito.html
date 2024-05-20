@@ -1,0 +1,114 @@
+{% extends 'core/plantillaCategorias.html'%}
+{% load static %}
+{% load custom_filters %}
+{% csrf_token %}
+
+{% block titulo %}
+    <title>Carrito</title>
+{% endblock titulo %}
+
+{% block disenos %}
+    <link rel="stylesheet" type="text/css" href="{% static  'css/general.css'%}">
+    <script src="https://www.paypal.com/sdk/js?client-id=AczGthJPkhe4g6zvL1uIQLkbbV3jTWO_KZFpOXMc6ElR_hXvWCa6-uyVYlAJO6RoDZzRaH046xuXpmbG&currency=USD"></script>
+{% endblock disenos %}
+
+{% block cuerpo %}
+
+    {% if carrito %}
+            
+        {% for i in carrito %}
+            <div class="row my-3 border border-dark p-3">
+                <div class="col-md-4">
+                    <img src="http://localhost:8000{{ i.producto.foto_prod }}" class="img-fluid imagen_prod" alt="No hay imagen disponible">
+                </div>
+                <div class="col-md-4 d-flex flex-column justify-content-center">
+                    <h2>{{ i.producto.nombre_prod }}</h2>
+                    <p class="mb-0">${{ i.subtotal }}</p>
+                    <p class="mb-0">{{ i.subtotal|divide_by:dolar|floatformat:2 }} $</p>
+                </div>
+                <div class="col-md-2 d-flex flex-column justify-content-center align-items-end">
+
+                    <form name="contador" id="boton-cant" method="POST" action="{% url 'cambiarCantidad' i.id_detalle%}">
+                        {% csrf_token %}
+                        <input type="number" min="1"  value="{{ i.cantidad }}" name="nueva_cantidad_{{ i.id_detalle }}" id="cantidad" class="form-control mb-2">
+                        <input type="submit" value="Aceptar" class="btn btn-primary">
+                    </form>
+                    
+                </div>
+                
+                <div class="col-md-2 d-flex flex-column justify-content-center align-items-end">
+
+                    <form name="borrar-form" id="borrar-boton" method="POST" action="{% url 'sacarDelCarro' i.id_detalle%}">
+                        {% csrf_token %}
+                        <input type="hidden" name="producto_id" value="{{ i.producto.id }}">
+                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                    </form>
+                    
+                </div>
+            </div>
+            
+            
+        {% endfor %}
+        <div class="row mt-5 border border-dark">
+            <div class="col-md-2"></div>
+            <div class="col-md-4 d-flex justify-content">
+                <p class="mb-0"><strong>Total:</strong> $ {{ venta.total }}</p>
+                <p class="mb-0"><strong>Total en dolares:</strong> {{ venta.total|divide_by:dolar|floatformat:2 }} $</p>
+            </div>
+            <div class="col-md-4 d-flex justify-content">
+                <form name="pagar-form" id="pagar-boton" method="POST" action="#">
+                    {% csrf_token %}
+                    <DIV id="paypal-button-container"></DIV>
+                    <script>
+                        var plata = "{{ venta.total }}";
+                        paypal.Buttons({
+                            style: {
+                                color: "silver",
+                                shape: "pill",
+                                label: "paypal",
+                            },
+                            createOrder: function (data, actions) {
+                                return actions.order.create({
+                                    purchase_units: [{
+                                        amount: {
+                                            value: plata
+                                        }
+                                    }]
+                                })
+                            },
+                            onApprove: function (data, actions) {
+                                actions.order.capture().then(function (detalles) {
+                                    document.getElementById("submit").disabled = false
+
+                                })
+                            },
+
+                            onCancel: function (data) {
+                                alert("Pago cancelado")
+                                console.log(data);
+                            },
+                        }).render('#paypal-button-container');
+                    </script>
+                </form>
+            </div>
+            <div class="col-md-2"></div>
+        </div>
+        <div class="row mt-5 border border-dark">
+            <div class="col-md-2"></div>
+            <div class="col-md-8 d-flex justify-content">
+                <form name="cambiar-estado" id="cambiar-estado" method="POST" action="{% url 'pagarConWebpay' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="total_webpay" value="{{ venta.total }}">
+                    <button type="submit" class="btn btn-success ml-2">Pagar con Webpay</button>
+                </form>
+            </div>
+            <div class="col-md-2"></div>
+        </div>
+    {% else %}
+        <h1>NO SE TIENE UN CARRITO ACTIVO</h1>
+    {% endif %}
+{% endblock cuerpo %}
+    
+{% block js %}
+    
+{% endblock js %}
